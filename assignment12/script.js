@@ -16,20 +16,24 @@ class Time {
 }
 let times = [];
 
-function createTrack(){
-    let id = tracks.length; //id will be used for html 'onclick' functions and ids
-    for(let i = 0; i < id; i++){//searches for if track already exists
-        if (tracks[i].name == document.getElementById('newTrack').value){
-            alert('Track \"' + document.getElementById('newTrack').value + '\" already exists')
+function createTrack() {
+    let trackName = document.getElementById('newTrack').value;
+
+    for(let i = 0; i < tracks.length; i++){ // Check if track already exists
+        if (tracks[i].name === trackName) {
+            alert('Track \"' + trackName + '\" already exists');
             return;
         }
     }
-    tracks[id] = new Track(document.getElementById('newTrack').value);
-    console.log(`creating track ${tracks[id].name} with id ${id}`);
+
+    let newTrack = new Track(trackName);
+    tracks.push(newTrack);
+    let id = tracks.length - 1;
+    console.log(`creating track ${newTrack.name} with id ${id}`);
     $(".card-body").append(`
         <div id= "track${id}" class="row card mt-2">
             <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">${tracks[id].name}</h2>
+                <h2 class="mb-0">${newTrack.name}</h2>
                 <button id="btn" class="btn btn-primary" onclick="deleteTrack(${id})">Delete</button>
             </div>
             <table class="table fs-4 sortable table-striped" id=timesList${id}>
@@ -42,13 +46,13 @@ function createTrack(){
             </table>
             <h3>Add Time</h3>
             <div class="col-sm">
-                <label for="newDriver"><b>Driver</b></label>
+                <label for="newDriver${id}"><b>Driver</b></label>
                 <input type="text" placeholder="Driver Name" id="newDriver${id}" class="form-control">
             </div><div class="col-sm">
-                <lable for="newCar"><b>Car</b></lable>
+                <label for="newCar${id}"><b>Car</b></label>
                 <input type="text" placeholder="year make model" id="newCar${id}" class="form-control">
             </div><div class="col-sm">
-                <label for="newTime"><b>Time</b></label>
+                <label for="newTime${id}"><b>Time</b></label>
                 <input type="text" placeholder="mm:ss.xxx" id="newTime${id}" class="form-control">
             </div>
             <button id="btn" class="btn btn-primary" onclick="addTime(${id})">Submit</button>
@@ -57,7 +61,7 @@ function createTrack(){
     console.log(tracks);
 }
 
-function addTime(local){//each create track has an id that is included when submitting a time
+function addTime(local) {
     let createDate = new Date();
     let id = tracks[local].times.length;
     console.log(`adding time to id: ${id} ${tracks[local].name}`);
@@ -65,10 +69,13 @@ function addTime(local){//each create track has an id that is included when subm
     let row = table.insertRow(1);
     row.setAttribute('id', `item-${id}`);
     row.insertCell(0).innerHTML = document.getElementById(`newTime${local}`).value; //cell html is set to the corresponding form value
-    row.insertCell(1).innerHTML = `${createDate.getFullYear()}-${createDate.getMonth() + 1}-${createDate.getDate()} ${createDate.getHours()}:${createDate.getMinutes()}` //native date 
+    row.insertCell(1).innerHTML = `${createDate.getFullYear()}-${createDate.getMonth() + 1}-${createDate.getDate()} ${createDate.getHours()}:${createDate.getMinutes()}`; //native date 
     row.insertCell(2).innerHTML = document.getElementById(`newDriver${local}`).value;
     row.insertCell(3).innerHTML = document.getElementById(`newCar${local}`).value;
-    row.insertCell(4).innerHTML = `<button id="btn" class="btn btn-primary" onclick="deleteTime(${local}, ${id})">Delete</button>`
+    row.insertCell(4).innerHTML = `
+        <button id="btn" class="btn btn-primary" onclick="editTime(${local}, ${id})">Edit</button>
+        <button id="btn" class="btn btn-primary" onclick="deleteTime(${local}, ${id})">Delete</button>
+    `;
     tracks[local].times[id] = 
         new Time(document.getElementById(`newTime${local}`).value, 
         document.getElementById(`newDriver${local}`).value, 
@@ -77,7 +84,7 @@ function addTime(local){//each create track has an id that is included when subm
     console.log(tracks[local].times.length);
 }
 
-function deleteTime(trackId, timeId){
+function deleteTime(trackId, timeId) {
     let table = document.getElementById(`timesList${trackId}`);
     let row = document.getElementById(`item-${timeId}`);
     table.deleteRow(row.rowIndex);
@@ -85,9 +92,46 @@ function deleteTime(trackId, timeId){
     tracks[trackId].times.splice(timeId, 1); // Remove the time from the array
 }
 
-function deleteTrack(trackId){
+function deleteTrack(trackId) {
     let element = document.getElementById(`track${trackId}`);
     element.parentElement.removeChild(element);
     tracks.splice(trackId, 1); // Remove the track from the array
     console.log(`deleting track ${trackId}`);
+}
+
+function editTime(trackId, timeId) {
+    let time = tracks[trackId].times[timeId];
+    document.getElementById(`newTime${trackId}`).value = time.time;
+    document.getElementById(`newDriver${trackId}`).value = time.driver;
+    document.getElementById(`newCar${trackId}`).value = time.car;
+
+    // Update button visuals
+    let submitButton = document.querySelector(`#track${trackId} button[onclick="addTime(${trackId})"]`);
+    submitButton.textContent = 'Update';
+    submitButton.onclick = function() {
+        updateTime(trackId, timeId);
+    };
+}
+
+function updateTime(trackId, timeId) {
+    let createDate = new Date();
+    let time = tracks[trackId].times[timeId];
+    time.time = document.getElementById(`newTime${trackId}`).value;
+    time.driver = document.getElementById(`newDriver${trackId}`).value;
+    time.car = document.getElementById(`newCar${trackId}`).value;
+    time.date = `${createDate.getFullYear()}-${createDate.getMonth() + 1}-${createDate.getDate()} ${createDate.getHours()}:${createDate.getMinutes()}`;
+
+    let table = document.getElementById(`timesList${trackId}`);
+    let row = document.getElementById(`item-${timeId}`);
+    row.cells[0].innerHTML = time.time;
+    row.cells[1].innerHTML = time.date;
+    row.cells[2].innerHTML = time.driver;
+    row.cells[3].innerHTML = time.car;
+
+    // Change the Update button 
+    let updateButton = document.querySelector(`#track${trackId} button[onclick="updateTime(${trackId}, ${timeId})"]`);
+    updateButton.textContent = 'Submit';
+    updateButton.onclick = function() {
+        addTime(trackId);
+    };
 }
