@@ -1,4 +1,4 @@
-class Track {
+class Track { //constructors for storing
     constructor(name){
         this.name = name;
         this.times = [];
@@ -75,7 +75,7 @@ function addTime(local) {
     row.insertCell(4).innerHTML = `
         <button id="btn" class="btn btn-primary" onclick="editTime(${local}, ${id})">Edit</button>
         <button id="btn" class="btn btn-primary" onclick="deleteTime(${local}, ${id})">Delete</button>
-    `;
+    `;//buttons for editing or delting times 
     tracks[local].times[id] = 
         new Time(document.getElementById(`newTime${local}`).value, 
         document.getElementById(`newDriver${local}`).value, 
@@ -108,9 +108,7 @@ function editTime(trackId, timeId) {
     // Update button visuals
     let submitButton = document.querySelector(`#track${trackId} button[onclick="addTime(${trackId})"]`);
     submitButton.textContent = 'Update';
-    submitButton.onclick = function() {
-        updateTime(trackId, timeId);
-    };
+    submitButton.setAttribute('onclick', `updateTime(${trackId}, ${timeId})`);
 }
 
 function updateTime(trackId, timeId) {
@@ -128,10 +126,8 @@ function updateTime(trackId, timeId) {
     row.cells[2].innerHTML = time.driver;
     row.cells[3].innerHTML = time.car;
 
-    // Change the Update button 
-    let updateButton = document.querySelector(`#track${trackId} button[onclick="updateTime(${trackId}, ${timeId})"]`);
-    updateButton.textContent = 'Submit';
-    updateButton.onclick = function() {
-        addTime(trackId);
-    };
+    // Reset button to 'Submit'
+    let submitButton = document.querySelector(`#track${trackId} button[onclick="updateTime(${trackId}, ${timeId})"]`);
+    submitButton.textContent = 'Submit';
+    submitButton.setAttribute('onclick', `addTime(${trackId})`);
 }
